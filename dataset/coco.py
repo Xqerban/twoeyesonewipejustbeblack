@@ -76,10 +76,10 @@ def split_dataset(annotations, train_ratio):
     return train_annotations, val_annotations
 
 input_json = 'data/label_train.json'
-train_dir = 'data/train'
+train_dir = 'data/image/train'
 train_ratio = 0.8
-train_labels_path = 'dataset/labels/train.json'
-val_labels_path = 'dataset/labels/val.json'
+train_labels_path = 'data/labels/train.json'
+val_labels_path = 'data/labels/val.json'
 
 with open(input_json, 'r') as f:
     original_annotations = json.load(f)
