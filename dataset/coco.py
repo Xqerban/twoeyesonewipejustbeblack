@@ -92,7 +92,6 @@ train_coco = convert_to_coco(train_annotations, train_dir)
 val_coco = convert_to_coco(val_annotations, train_dir)
 
 # 保存训练集和验证集的COCO格式数据
-os.makedirs('annotations', exist_ok=True)
 with open(train_labels_path, 'w') as f:
     json.dump(train_coco, f, indent=4) 
 
