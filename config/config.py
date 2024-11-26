@@ -7,7 +7,6 @@ class Config(object):
     TEST_IMG_DIR = 'data/image/val/'
     TRAIN_ANN = 'data/annotations/train.json'
     VAL_ANN = 'data/annotations/val.json'
-    TEST_ANN = 'data/annotations/test.json'
 
     TRAIN_RATIO = 0.8 # 训练集占比
     
