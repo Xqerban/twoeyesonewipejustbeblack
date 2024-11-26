@@ -1,51 +1,56 @@
 """读取 COCO 格式的文件并将数据转换为 PyTorch 可用的格式"""
 import torch
 from torch.utils.data import Dataset
-from PIL import Image
+from torchvision import transforms
+from pycocotools.coco import COCO
 import os
-import json
-import torchvision.transforms as T
+from PIL import Image
 
 class CocoDataset(Dataset):
-    def __init__(self, annotation_file, img_dir, transforms=None):
-        with open(annotation_file, 'r') as f:# COCO 格式的标注文件（JSON 格式）
-            self.data = json.load(f)
+    def __init__(self, json_file, img_dir, transform=None):
+        self.coco = COCO(json_file)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.img_ids = list(self.coco.imgs.keys())
         
-        self.img_dir = img_dir # 图片目录
-        self.transforms = transforms
-        self.img_ids = [item['id'] for item in self.data['images']]
-
     def __len__(self):
-        return len(self.data['images'])
+        return len(self.img_ids)
     
     def __getitem__(self, idx):
-        img_info = self.data['images'][idx]
-        img_path = os.path.join(self.img_dir, img_info['file_name']) # 图片的完整路径
+        img_id = self.img_ids[idx]
+        img_info = self.coco.loadImgs(img_id)[0]
+        img_path = os.path.join(self.img_dir, img_info['file_name'])
         img = Image.open(img_path).convert("RGB")
-
-        target = {}
-        target['boxes'] = []
-        target['labels'] = []
-        target['area'] = []
-
-        for annotation in self.data['annotations']:
-            if annotation['image_id'] == img_info['id']:
-                target['boxes'].append(annotation['bbox'])
-                target['labels'].append(annotation['category_id'])
-                target['area'].append(annotation['area'])
         
-        target['boxes'] = torch.as_tensor(target['boxes'], dtype=torch.float32)
-        target['labels'] = torch.as_tensor(target['labels'], dtype=torch.int64)
-        target['area'] = torch.as_tensor(target['area'], dtype=torch.float32)
-
-        if self.transforms:
-            img, target = self.transforms(img, target)
-
+        # 获取标注信息
+        ann_ids = self.coco.getAnnIds(imgIds=img_id)
+        anns = self.coco.loadAnns(ann_ids)
+        
+        # 标注的 bbox 和类别
+        boxes = []
+        labels = []
+        for ann in anns:
+            boxes.append(ann['bbox'])
+            labels.append(ann['category_id'])
+        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        labels = torch.as_tensor(labels, dtype=torch.int64)
+        
+        target = {
+            'boxes': boxes,
+            'labels': labels,
+            'image_id': torch.tensor([img_id]),
+            'area': torch.tensor([ann['area'] for ann in anns]),
+            'iscrowd': torch.zeros(len(anns), dtype=torch.int64)
+        }
+        
+        if self.transform:
+            img = self.transform(img)
+        
         return img, target
     
-# TODO
-def get_transform():
-    return T.Compose([
-        T.ToTensor(),
-        T.Resize((800, 800)),
+def build_transform():
+    # TODO
+    transform = transforms.Compose([
+        transforms.ToTensor(),
     ])
+    return transform

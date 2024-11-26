@@ -2,6 +2,7 @@ import json
 import os
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from config.config import Config
 
 def convert_to_coco(annotations, train_dir):
     coco_dataset = {
@@ -75,11 +76,11 @@ def split_dataset(annotations, train_ratio):
     
     return train_annotations, val_annotations
 
-input_json = 'data/label_train.json'
-train_dir = 'data/image/train'
-train_ratio = 0.8
-train_labels_path = 'data/annotations/train.json'
-val_labels_path = 'data/annotations/val.json'
+train_ratio = Config.TRAIN_RATIO
+input_json = Config.TRAIN_LABEL
+train_dir = Config.IMG_DIR
+train_labels_path = Config.TRAIN_ANN
+val_labels_path = Config.VAL_ANN
 
 with open(input_json, 'r') as f:
     original_annotations = json.load(f)
