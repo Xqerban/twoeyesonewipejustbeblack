@@ -8,7 +8,7 @@ from dataset.coco import build_data
 def main():
     train_ratio = Config.TRAIN_RATIO
     input_json = Config.TRAIN_LABEL
-    train_dir = Config.IMG_DIR
+    train_dir = Config.TRAIN_IMG_DIR
     train_labels_path = Config.TRAIN_ANN
     val_labels_path = Config.VAL_ANN
 
