@@ -1,2 +1,3 @@
 data/image/train
 data/image/val 
+__pycache__/

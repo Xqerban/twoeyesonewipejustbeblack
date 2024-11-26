@@ -2,7 +2,6 @@ import json
 import os
 from PIL import Image
 from sklearn.model_selection import train_test_split
-from config.config import Config
 
 def convert_to_coco(annotations, train_dir):
     coco_dataset = {
@@ -76,29 +75,24 @@ def split_dataset(annotations, train_ratio):
     
     return train_annotations, val_annotations
 
-train_ratio = Config.TRAIN_RATIO
-input_json = Config.TRAIN_LABEL
-train_dir = Config.IMG_DIR
-train_labels_path = Config.TRAIN_ANN
-val_labels_path = Config.VAL_ANN
+def build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path):
+    with open(input_json, 'r') as f:
+        original_annotations = json.load(f)
 
-with open(input_json, 'r') as f:
-    original_annotations = json.load(f)
+    # 划分训练集和验证集
+    train_annotations, val_annotations = split_dataset(original_annotations, train_ratio)
 
-# 划分训练集和验证集
-train_annotations, val_annotations = split_dataset(original_annotations, train_ratio)
+    # 转换并保存COCO格式数据集
+    train_coco = convert_to_coco(train_annotations, train_dir)
+    val_coco = convert_to_coco(val_annotations, train_dir)
 
-# 转换并保存COCO格式数据集
-train_coco = convert_to_coco(train_annotations, train_dir)
-val_coco = convert_to_coco(val_annotations, train_dir)
+    # 保存训练集和验证集的COCO格式数据
+    with open(train_labels_path, 'w') as f:
+        json.dump(train_coco, f, indent=4) 
 
-# 保存训练集和验证集的COCO格式数据
-with open(train_labels_path, 'w') as f:
-    json.dump(train_coco, f, indent=4) 
+    with open(val_labels_path, 'w') as f:
+        json.dump(val_coco, f, indent=4)  
 
-with open(val_labels_path, 'w') as f:
-    json.dump(val_coco, f, indent=4)  
-
-# 输出划分结果
-print(f"Train images: {len(train_annotations)}")
-print(f"Val images: {len(val_annotations)}")
+    # 输出划分结果
+    print(f"Train images: {len(train_annotations)}")
+    print(f"Val images: {len(val_annotations)}")

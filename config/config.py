@@ -1,6 +1,6 @@
 import torch
 
-class Config:
+class Config(object):
     # 数据集
     TRAIN_LABEL = 'data/label_train.json'
     IMG_DIR = 'data/image/train/'
