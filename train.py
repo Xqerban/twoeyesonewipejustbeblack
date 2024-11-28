@@ -33,7 +33,7 @@ def train():
     val_loader = DataLoader(val_dataset, batch_size=Config.BATCH_SIZE, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
 
     # TODO
-    model = FasterRCNNVGG16(n_fg_class=Config.NUM_CLASSES)
+    model = FasterRCNNVGG16(n_fg_class=Config.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
     model.to(Config.DEVICE)
 
     params = [p for p in model.parameters() if p.requires_grad]
