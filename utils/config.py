@@ -8,9 +8,6 @@ import torch
 
 class Config:
     # data
-    # voc_data_dir = (
-    #     r"C:\Users\louis\Downloads\VOC\VOCtrainval_06-Nov-2007\VOCdevkit\VOC2007"
-    # )
     TRAIN_LABEL = 'data/label_train.json'
     TRAIN_IMG_DIR = 'data/image/train/'
     TEST_IMG_DIR = 'data/image/val/'
@@ -22,7 +19,7 @@ class Config:
     # 网络参数 TODO
     NUM_CLASSES = 3
     LEARNING_RATE = 0.005
-    BATCH_SIZE = 8
+    BATCH_SIZE = 64
     EPOCHS = 10
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     
