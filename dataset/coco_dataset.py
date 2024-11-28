@@ -3,20 +3,25 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from pycocotools.coco import COCO
 
+from PIL import Image
+import os
+
 class CocoDataset(Dataset):
-    def __init__(self, json_file, img_dir, transform=None):
+    def __init__(self, json_file, data_dir,use_difficult=False, return_difficult=False):
         self.coco = COCO(json_file)
-        self.img_dir = img_dir
-        self.transform = transform
+        self.data_dir = data_dir
         self.img_ids = list(self.coco.imgs.keys())
+        self.label_names = COCO_BBOX_LABEL_NAMES
+        self.use_difficult = use_difficult
+        self.return_difficult = return_difficult
         
     def __len__(self):
         return len(self.img_ids)
     
-    def __getitem__(self, idx):
+    def get_example(self, idx):
         img_id = self.img_ids[idx]
         img_info = self.coco.loadImgs(img_id)[0]
-        img_path = os.path.join(self.img_dir, img_info['file_name'])
+        img_path = os.path.join(self.data_dir, img_info['file_name'])
         img = Image.open(img_path).convert("RGB")
         
         # 获取标注信息
@@ -26,24 +31,28 @@ class CocoDataset(Dataset):
         # 标注的 bbox 和类别
         boxes = []
         labels = []
+        difficult = []
+
         for ann in anns:
-            boxes.append(ann['bbox'])
+            if not self.use_difficult and ann.get('difficult', 0) == 1:
+                continue
+            
+            # Convert COCO bbox [xmin, ymin, width, height] to [ymin, xmin, ymax, xmax]
+            xmin, ymin, width, height = ann['bbox']
+            boxes.append([ymin, xmin, ymin + height, xmin + width])
             labels.append(ann['category_id'])
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
-        labels = torch.as_tensor(labels, dtype=torch.int64)
+            difficult.append(ann.get('difficult', 0))
         
-        target = {
-            'boxes': boxes,
-            'labels': labels,
-            'image_id': torch.tensor([img_id]),
-            'area': torch.tensor([ann['area'] for ann in anns]),
-            'iscrowd': torch.zeros(len(anns), dtype=torch.int64)
-        }
+        boxes = torch.tensor(boxes, dtype=torch.float32)
+        labels = torch.tensor(labels, dtype=torch.int32)
+        difficult = torch.tensor(difficult, dtype=torch.uint8)  # Use uint8 for difficult flags
         
-        if self.transform:
-            img = self.transform(img)
-        
-        return img, target
+        # if self.return_difficult:
+        #     return img, boxes, labels, difficult
+        return img, boxes, labels, difficult
+
+    __getitem__ = get_example
+
 
 COCO_BBOX_LABEL_NAMES = (
     "tampered",

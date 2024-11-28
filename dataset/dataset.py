@@ -1,21 +1,84 @@
-"""读取 COCO 格式的文件并将数据转换为 PyTorch 可用的格式"""
-import torch
+import torch as t
 from torch.utils.data import Dataset
-from torchvision import transforms
 from pycocotools.coco import COCO
-import os
 from skimage import transform as sktsf
-from PIL import Image
+from torchvision import transforms as tvtsf
 from utils.config import opt
+from dataset.coco_dataset import CocoDataset
+from dataset import util
+import numpy as np
 
-    
-def build_transform():
-    # TODO
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    return transform
 
+class Dataset(object):
+    def __init__(self, opt):
+        self.opt = opt
+        self.db = CocoDataset(opt.voc_data_dir)
+        self.tsf = Transform(opt.min_size, opt.max_size)
+
+    def __getitem__(self, idx):
+        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        img, bbox, label, scale = self.tsf((ori_img, bbox, label))
+        return img.copy(), bbox.copy(), label.copy(), scale
+
+    def __len__(self):
+        return len(self.db)
+
+
+class Transform(object):
+    def __init__(self, min_size=600, max_size=1000):
+        self.min_size = min_size
+        self.max_size = max_size
+
+    def __call__(self, in_data):
+        img, bbox, label = in_data
+        _, H, W = img.shape
+        img = preprocess(img, self.min_size, self.max_size)
+        _, o_H, o_W = img.shape
+        scale = o_H / H
+        bbox = util.resize_bbox(bbox, (H, W), (o_H, o_W))
+
+        # horizontally flip
+        img, params = util.random_flip(img, x_random=True, return_param=True)
+        bbox = util.flip_bbox(bbox, (o_H, o_W), x_flip=params["x_flip"])
+
+        return img, bbox, label, scale
+
+# def build_transform():
+#     # TODO
+#     transform = transforms.Compose([
+#         transforms.ToTensor(),
+#     ])
+#     return transform
+
+
+
+def inverse_normalize(img):
+    if opt.caffe_pretrain:
+        img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1))
+        return img[::-1, :, :]
+    # approximate un-normalize for visualize
+    return (img * 0.225 + 0.45).clip(min=0, max=1) * 255
+
+
+def pytorch_normalze(img):
+    """
+    https://github.com/pytorch/vision/issues/223
+    return appr -1~1 RGB
+    """
+    normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    img = normalize(t.from_numpy(img))
+    return img.numpy()
+
+
+def caffe_normalize(img):
+    """
+    return appr -125-125 BGR
+    """
+    img = img[[2, 1, 0], :, :]  # RGB-BGR
+    img = img * 255
+    mean = np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1)
+    img = (img - mean).astype(np.float32, copy=True)
+    return img
 
 def preprocess(img, min_size=600, max_size=1000):
     """Preprocess an image for feature extraction.

@@ -8,8 +8,8 @@ def convert_to_coco(annotations, train_dir):
         "images": [],
         "annotations": [],
         "categories": [
-            {"id": 1, "name": "tampered"},
-            {"id": 2, "name": "untampered"}
+            {"id": 0, "name": "tampered"},
+            {"id": 1, "name": "untampered"}
         ]
     }
 
