@@ -1,3 +1,8 @@
+import torch
+from torch.utils.data import Dataset
+from torchvision import transforms
+from pycocotools.coco import COCO
+
 class CocoDataset(Dataset):
     def __init__(self, json_file, img_dir, transform=None):
         self.coco = COCO(json_file)
