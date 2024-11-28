@@ -5,6 +5,7 @@ from dataset.dataset import CocoDataset
 from dataset.dataset import build_transform
 from config.config import Config
 from dataset.coco import build_data
+from model import FasterRCNNVGG16
 
 def train():
     train_ratio = Config.TRAIN_RATIO
@@ -32,31 +33,31 @@ def train():
     val_loader = DataLoader(val_dataset, batch_size=Config.BATCH_SIZE, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
 
     # TODO
-    # model = model(Config.NUM_CLASSES)
-    # model.to(Config.DEVICE)
+    model = FasterRCNNVGG16()
+    model.to(Config.DEVICE)
     
-    # params = [p for p in model.parameters() if p.requires_grad]
-    # optimizer = torch.optim.SGD(params, lr=Config.LEARNING_RATE)
-    # lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+    params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.SGD(params, lr=Config.LEARNING_RATE)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
     
-    # for epoch in range(Config.EPOCHS):
-    #     model.train()
-    #     for images, targets in train_loader:
-    #         images = [image.to(Config.DEVICE) for image in images]
-    #         targets = [{k: v.to(Config.DEVICE) for k, v in t.items()} for t in targets]
-    #         loss_dict = model(images, targets)
+    for epoch in range(Config.EPOCHS):
+        model.train()
+        for images, targets in train_loader:
+            images = [image.to(Config.DEVICE) for image in images]
+            targets = [{k: v.to(Config.DEVICE) for k, v in t.items()} for t in targets]
+            loss_dict = model(images, targets)
             
-    #         losses = sum(loss for loss in loss_dict.values())
+            losses = sum(loss for loss in loss_dict.values())
             
-    #         optimizer.zero_grad()
-    #         losses.backward()
-    #         optimizer.step()
+            optimizer.zero_grad()
+            losses.backward()
+            optimizer.step()
 
-    #     lr_scheduler.step()
+        lr_scheduler.step()
         
-    #     print(f"Epoch [{epoch+1}/{Config.EPOCHS}], Loss: {losses.item()}")
+        print(f"Epoch [{epoch+1}/{Config.EPOCHS}], Loss: {losses.item()}")
 
-    # torch.save(model.state_dict(), './checkpoints/model.pth')
+    torch.save(model.state_dict(), './checkpoints/model.pth')
 
 
 if __name__ == "__main__":
