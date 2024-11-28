@@ -3,7 +3,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from dataset.dataset import CocoDataset
 from dataset.dataset import build_transform
-from config.config import Config
+from utils.config import Config
 from dataset.coco import build_data
 from model.faster_rcnn_vgg16 import *
 
