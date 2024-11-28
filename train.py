@@ -6,45 +6,39 @@ from dataset.dataset import build_transform
 from utils.config import Config
 from dataset.coco import build_data
 from model.faster_rcnn_vgg16 import *
+from utils.config import opt
+from dataset.dataset import Dataset
 
-def train():
-    train_ratio = Config.TRAIN_RATIO
-    input_json = Config.TRAIN_LABEL
-    train_dir = Config.TRAIN_IMG_DIR
-    train_labels_path = Config.TRAIN_ANN
-    val_labels_path = Config.VAL_ANN
+def train(**kwargs):
+    opt._parse(kwargs)
+
+    train_ratio = opt.TRAIN_RATIO
+    input_json = opt.TRAIN_LABEL
+    train_dir = opt.TRAIN_IMG_DIR
+    train_labels_path = opt.TRAIN_ANN
+    val_labels_path = opt.VAL_ANN
 
     build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path)
 
-    transform = build_transform()
-    
-    train_dataset = CocoDataset(
-        json_file=train_labels_path,
-        img_dir=train_dir,
-        transform=transform
-    )
-    val_dataset = CocoDataset(
-        json_file=val_labels_path,
-        img_dir=train_dir,
-        transform=transform
-    )
-    
-    train_loader = DataLoader(train_dataset, batch_size=Config.BATCH_SIZE, shuffle=True, collate_fn=lambda x: tuple(zip(*x)))
-    val_loader = DataLoader(val_dataset, batch_size=Config.BATCH_SIZE, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
+    train_dataset = Dataset(train_labels_path, train_dir)
+    val_dataset = Dataset(val_labels_path, train_dir)
+
+    train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=lambda x: tuple(zip(*x)))
+    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
 
     # TODO
-    model = FasterRCNNVGG16(n_fg_class=Config.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
-    model.to(Config.DEVICE)
+    model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
+    model.to(opt.DEVICE)
 
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=Config.LEARNING_RATE)
+    optimizer = torch.optim.SGD(params, lr=opt.LEARNING_RATE)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
-    for epoch in range(Config.EPOCHS):
+    for epoch in range(opt.EPOCHS):
         model.train()
         for images, targets in train_loader:
-            images = [image.to(Config.DEVICE) for image in images]
-            targets = [{k: v.to(Config.DEVICE) for k, v in t.items()} for t in targets]
+            images = [image.to(opt.DEVICE) for image in images]
+            targets = [{k: v.to(opt.DEVICE) for k, v in t.items()} for t in targets]
             loss_dict = model(images, targets)
             
             losses = sum(loss for loss in loss_dict.values())
@@ -55,7 +49,7 @@ def train():
 
         lr_scheduler.step()
         
-        print(f"Epoch [{epoch+1}/{Config.EPOCHS}], Loss: {losses.item()}")
+        print(f"Epoch [{epoch+1}/{opt.EPOCHS}], Loss: {losses.item()}")
 
     torch.save(model.state_dict(), './checkpoints/model.pth')
 

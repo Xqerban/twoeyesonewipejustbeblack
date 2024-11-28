@@ -10,9 +10,8 @@ import numpy as np
 
 
 class Dataset(object):
-    def __init__(self, opt):
-        self.opt = opt
-        self.db = CocoDataset(opt.voc_data_dir)
+    def __init__(self, label_path, img_dir):
+        self.db = CocoDataset(label_path, img_dir)
         self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
@@ -42,14 +41,6 @@ class Transform(object):
         bbox = util.flip_bbox(bbox, (o_H, o_W), x_flip=params["x_flip"])
 
         return img, bbox, label, scale
-
-# def build_transform():
-#     # TODO
-#     transform = transforms.Compose([
-#         transforms.ToTensor(),
-#     ])
-#     return transform
-
 
 
 def inverse_normalize(img):
