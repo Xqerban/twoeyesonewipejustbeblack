@@ -9,10 +9,10 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import nms
 
-from data.dataset import preprocess
 from model.utils.bbox_tools import loc2bbox
 from utils import array_tool as at
 from utils.config import opt
+from dataset.dataset import preprocess
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
