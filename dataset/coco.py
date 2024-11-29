@@ -24,12 +24,14 @@ def convert_to_coco(annotations, train_dir):
         if os.path.exists(img_path):
             with Image.open(img_path) as img:
                 width, height = img.size
+        else:
+            continue
         
         # images
         img_info = {
             "id": img_numeric_id,
             "file_name": img_id,
-            "height": height,  
+            "height": height,
             "width": width
         }
         coco_dataset["images"].append(img_info)

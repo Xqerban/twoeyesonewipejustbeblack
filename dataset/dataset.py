@@ -5,7 +5,7 @@ from skimage import transform as sktsf
 from torchvision import transforms as tvtsf
 from utils.config import opt
 from dataset.coco_dataset import CocoDataset
-from dataset import util
+from . import util
 import numpy as np
 
 
@@ -30,9 +30,9 @@ class Transform(object):
 
     def __call__(self, in_data):
         img, bbox, label = in_data
-        _, H, W = img.shape
+        H, W, _ = img.shape
         img = preprocess(img, self.min_size, self.max_size)
-        _, o_H, o_W = img.shape
+        o_H, o_W, _ = img.shape
         scale = o_H / H
         bbox = util.resize_bbox(bbox, (H, W), (o_H, o_W))
 
@@ -91,7 +91,7 @@ def preprocess(img, min_size=600, max_size=1000):
         ~numpy.ndarray: A preprocessed image.
 
     """
-    C, H, W = img.shape
+    H, W, C = img.shape
     scale1 = min_size / min(H, W)
     scale2 = max_size / max(H, W)
     scale = min(scale1, scale2)
