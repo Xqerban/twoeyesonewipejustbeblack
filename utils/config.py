@@ -17,7 +17,7 @@ class Config:
     TRAIN_RATIO = 0.8 # 训练集占比
     
     # 网络参数 TODO
-    NUM_CLASSES = 3
+    NUM_CLASSES = 2
     LEARNING_RATE = 0.005
     BATCH_SIZE = 64
     EPOCHS = 10
