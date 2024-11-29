@@ -7,7 +7,7 @@ from utils.config import Config
 from dataset.coco import build_data
 from model.faster_rcnn_vgg16 import *
 from utils.config import opt
-from dataset.dataset import Dataset
+from dataset.dataset import *
 
 def train(**kwargs):
     opt._parse(kwargs)
@@ -23,8 +23,8 @@ def train(**kwargs):
     train_dataset = Dataset(train_labels_path, train_dir)
     val_dataset = Dataset(val_labels_path, train_dir)
 
-    train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=lambda x: tuple(zip(*x)))
-    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=lambda x: tuple(zip(*x)))
+    train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
+    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
 
     # TODO
     model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])

@@ -7,6 +7,7 @@ from utils.config import opt
 from dataset.coco_dataset import CocoDataset
 from . import util
 import numpy as np
+import torch
 
 
 class Dataset(object):
@@ -16,15 +17,17 @@ class Dataset(object):
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
+        if ori_img is None or len(bbox) == 0 or len(label) == 0:
+            return None
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        return img.copy(), bbox.copy(), label.copy(), scale
+        return img.copy(), bbox.clone(), label.clone(), scale
 
     def __len__(self):
         return len(self.db)
 
 
 class Transform(object):
-    def __init__(self, min_size=600, max_size=1000):
+    def __init__(self, min_size, max_size):
         self.min_size = min_size
         self.max_size = max_size
 
@@ -106,3 +109,16 @@ def preprocess(img, min_size=600, max_size=1000):
     else:
         normalize = pytorch_normalze
     return normalize(img)
+
+
+def collate_fn(batch):
+    # 过滤掉 None 样本
+    batch = [item for item in batch if item[0] is not None]
+
+    # 使用默认的 collate_fn 进行批处理
+    images, bboxes, labels, scales = zip(*batch)
+    images = torch.stack(images, dim=0)
+    bboxes = torch.stack(bboxes, dim=0)
+    labels = torch.stack(labels, dim=0)
+
+    return images, bboxes, labels, scales

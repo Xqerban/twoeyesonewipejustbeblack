@@ -61,8 +61,8 @@ def convert_to_coco(annotations, train_dir):
                 "area": 0,  # 无边界框，面积为 0
                 "iscrowd": 0
             }
-            coco_dataset["annotations"].append(annotation)
-            annotation_id += 1
+            # coco_dataset["annotations"].append(annotation)
+            # annotation_id += 1
     
     return coco_dataset
 

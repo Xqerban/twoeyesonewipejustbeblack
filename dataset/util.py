@@ -64,7 +64,7 @@ def resize_bbox(bbox, in_size, out_size):
         Bounding boxes rescaled according to the given image shapes.
 
     """
-    bbox = bbox.copy()
+    bbox = bbox.clone()
     y_scale = float(out_size[0]) / in_size[0]
     x_scale = float(out_size[1]) / in_size[1]
     bbox[:, 0] = y_scale * bbox[:, 0]
@@ -100,7 +100,7 @@ def flip_bbox(bbox, size, y_flip=False, x_flip=False):
 
     """
     H, W = size
-    bbox = bbox.copy()
+    bbox = bbox.clone()
     if y_flip:
         y_max = H - bbox[:, 0]
         y_min = H - bbox[:, 2]

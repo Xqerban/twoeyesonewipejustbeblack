@@ -39,8 +39,6 @@ class CocoDataset(Dataset):
         for ann in anns:
             if not self.use_difficult and ann.get('difficult', 0) == 1:
                 continue
-            if ann["category_id"] == 2:
-                continue
 
             # Convert COCO bbox [xmin, ymin, width, height] to [ymin, xmin, ymax, xmax]
             xmin, ymin, width, height = ann['bbox']
@@ -63,3 +61,6 @@ COCO_BBOX_LABEL_NAMES = (
     "tampered",
     "untampered",
 )
+
+
+
