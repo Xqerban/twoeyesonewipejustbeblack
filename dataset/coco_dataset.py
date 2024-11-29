@@ -54,8 +54,11 @@ class CocoDataset(Dataset):
             if not self.use_difficult and ann.get('difficult', 0) == 1:
                 continue
 
-            # 如果 bbox 为空，跳过该标注
+             # 如果 bbox 为空，返回 [0, 0, 0, 0]
             if not ann['bbox']:
+                boxes.append([0, 0, 0, 0])
+                labels.append(ann['category_id'])
+                difficult.append(ann.get('difficult', 0))
                 continue
 
             # Convert COCO bbox [xmin, ymin, width, height] to [ymin, xmin, ymax, xmax]
@@ -63,11 +66,6 @@ class CocoDataset(Dataset):
             boxes.append([ymin, xmin, ymin + height, xmin + width])
             labels.append(ann['category_id']) 
             difficult.append(ann.get('difficult', 0))
-
-
-        # 如果 boxes 为空，返回 None    
-        if not boxes:
-            return None
 
         boxes = torch.tensor(boxes, dtype=torch.float32)
         labels = torch.tensor(labels, dtype=torch.int32)
