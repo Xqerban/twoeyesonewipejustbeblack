@@ -31,8 +31,9 @@ def train(**kwargs):
 
     # TODO
     model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
-    model.to(opt.DEVICE)
-
+    model.to(opt.DEVICE) 
+    print("model construct completed")
+                
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=opt.LEARNING_RATE)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)

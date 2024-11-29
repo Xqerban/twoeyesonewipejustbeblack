@@ -56,6 +56,14 @@ class FasterRCNNVGG16(FasterRCNN):
     feat_stride = 16  # downsample 16x for output of conv5 in vgg16
 
     def __init__(self, n_fg_class, ratios, anchor_scales):
+        """初始化 Faster R-CNN VGG16 模型
+
+        Args:
+            n_fg_class (int): 不包括背景的类别数量
+            ratios (list of floats): anchor 的宽高比列表
+            anchor_scales (list of numbers): anchor 的尺度列表,
+                最终的 anchor 面积将是 anchor_scales 中元素的平方与原始窗口面积的乘积
+        """
         # NOTE  Decompose VGG16 model
         extractor, classifier = decom_vgg16()
 
