@@ -8,8 +8,8 @@ def convert_to_coco(annotations, train_dir):
         "images": [],
         "annotations": [],
         "categories": [
-            {"id": 0, "name": "tampered"},
-            {"id": 1, "name": "untampered"}
+            {"id": 1, "name": "tampered"},
+            {"id": 2, "name": "untampered"}
         ]
     }
 
@@ -61,8 +61,8 @@ def convert_to_coco(annotations, train_dir):
                 "area": 0,  # 无边界框，面积为 0
                 "iscrowd": 0
             }
-            # coco_dataset["annotations"].append(annotation)
-            # annotation_id += 1
+            coco_dataset["annotations"].append(annotation)
+            annotation_id += 1
     
     return coco_dataset
 

@@ -8,6 +8,7 @@ from dataset.coco import build_data
 from model.faster_rcnn_vgg16 import *
 from utils.config import opt
 from dataset.dataset import *
+import os
 
 def train(**kwargs):
     opt._parse(kwargs)
@@ -18,7 +19,9 @@ def train(**kwargs):
     train_labels_path = opt.TRAIN_ANN
     val_labels_path = opt.VAL_ANN
 
-    build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path)
+    # 如果训练数据和验证数据不存在，则生成数据
+    if not os.path.exists(train_labels_path) or not os.path.exists(val_labels_path):
+        build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path)
 
     train_dataset = Dataset(train_labels_path, train_dir)
     val_dataset = Dataset(val_labels_path, train_dir)
@@ -27,31 +30,31 @@ def train(**kwargs):
     val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
 
     # TODO
-    model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
-    model.to(opt.DEVICE)
+    # model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
+    # model.to(opt.DEVICE)
 
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=opt.LEARNING_RATE)
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+    # params = [p for p in model.parameters() if p.requires_grad]
+    # optimizer = torch.optim.SGD(params, lr=opt.LEARNING_RATE)
+    # lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
-    for epoch in range(opt.EPOCHS):
-        model.train()
-        for images, targets in train_loader:
-            images = [image.to(opt.DEVICE) for image in images]
-            targets = [{k: v.to(opt.DEVICE) for k, v in t.items()} for t in targets]
-            loss_dict = model(images, targets)
+    # for epoch in range(opt.EPOCHS):
+    #     model.train()
+    #     for images, targets in train_loader:
+    #         images = [image.to(opt.DEVICE) for image in images]
+    #         targets = [{k: v.to(opt.DEVICE) for k, v in t.items()} for t in targets]
+    #         loss_dict = model(images, targets)
             
-            losses = sum(loss for loss in loss_dict.values())
+    #         losses = sum(loss for loss in loss_dict.values())
             
-            optimizer.zero_grad()
-            losses.backward()
-            optimizer.step()
+    #         optimizer.zero_grad()
+    #         losses.backward()
+    #         optimizer.step()
 
-        lr_scheduler.step()
+    #     lr_scheduler.step()
         
-        print(f"Epoch [{epoch+1}/{opt.EPOCHS}], Loss: {losses.item()}")
+    #     print(f"Epoch [{epoch+1}/{opt.EPOCHS}], Loss: {losses.item()}")
 
-    torch.save(model.state_dict(), './checkpoints/model.pth')
+    # torch.save(model.state_dict(), './checkpoints/model.pth')
 
 
 if __name__ == "__main__":
