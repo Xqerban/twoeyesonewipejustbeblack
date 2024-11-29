@@ -51,6 +51,7 @@ class CocoDataset(Dataset):
         difficult = []
 
         for ann in anns:
+            # 如果ann中没有difficult，则设置为0，表示不是困难样本
             if not self.use_difficult and ann.get('difficult', 0) == 1:
                 continue
 
