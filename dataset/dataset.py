@@ -24,6 +24,20 @@ class Dataset(object):
 
     def __len__(self):
         return len(self.db)
+    
+class TestDataset(object):
+    def __init__(self, label_path, img_dir, split="test", use_difficult=True):# TODO false or true
+        self.db = CocoDataset(
+            label_path, img_dir, use_difficult=use_difficult
+        )
+
+    def __getitem__(self, idx):
+        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        img = preprocess(ori_img)
+        return img, ori_img.shape[1:], bbox, label, difficult
+
+    def __len__(self):
+        return len(self.db)
 
 
 class Transform(object):

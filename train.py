@@ -24,7 +24,7 @@ def train(**kwargs):
         build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path)
 
     train_dataset = Dataset(train_labels_path, train_dir)
-    val_dataset = Dataset(val_labels_path, train_dir)
+    val_dataset = TestDataset(val_labels_path, train_dir)
 
     train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
