@@ -61,6 +61,8 @@ class Transform(object):
 
 
 def inverse_normalize(img):
+    """逆归一化
+    """
     if opt.caffe_pretrain:
         img = img + (np.array([122.7717, 115.9465, 102.9801]).reshape(3, 1, 1))
         return img[::-1, :, :]

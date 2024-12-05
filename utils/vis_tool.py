@@ -143,6 +143,8 @@ def fig4vis(fig):
 
 
 def visdom_bbox(*args, **kwargs):
+    """在图像上绘制边界框
+    """
     fig = vis_bbox(*args, **kwargs)
     data = fig4vis(fig)
     return data

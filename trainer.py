@@ -258,6 +258,9 @@ class FasterRCNNTrainer(nn.Module):
             meter.add(loss_d[key])
 
     def reset_meters(self):
+        """重置所有评估指标
+        通常在每个epoch开始时调用,以便重新开始统计新的epoch的指标。
+        """
         for key, meter in self.meters.items():
             meter.reset()
         self.roi_cm.reset()
