@@ -9,6 +9,7 @@ from model.faster_rcnn_vgg16 import *
 from utils.config import opt
 from dataset.dataset import *
 import os
+from trainer import FasterRCNNTrainer
 
 def train(**kwargs):
     opt._parse(kwargs)
@@ -23,16 +24,18 @@ def train(**kwargs):
     if not os.path.exists(train_labels_path) or not os.path.exists(val_labels_path):
         build_data(train_ratio, input_json, train_dir, train_labels_path, val_labels_path)
 
+    print("load data...")
     train_dataset = Dataset(train_labels_path, train_dir)
     val_dataset = TestDataset(val_labels_path, train_dir)
 
-    train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
-    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
+    train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=collate_fn,num_workers=opt.num_workers)
+    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn,num_workers=opt.test_num_workers)
 
     # TODO
     model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
-    model.to(opt.DEVICE) 
     print("model construct completed")
+
+    trainer = FasterRCNNTrainer(model).to(opt.DEVICE)
                 
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=opt.LEARNING_RATE)
