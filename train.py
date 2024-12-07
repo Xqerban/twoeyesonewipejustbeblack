@@ -15,15 +15,14 @@ from utils.eval_tool import eval_detection_voc
 
 def eval(dataloader, faster_rcnn):
     pred_bboxes, pred_labels, pred_scores = list(), list(), list()
-    gt_bboxes, gt_labels, gt_difficults = list(), list(), list()
-    for ii, (imgs, sizes, gt_bboxes_, gt_labels_, gt_difficults_) in tqdm(
+    gt_bboxes, gt_labels = list(), list()
+    for ii, (imgs, sizes, gt_bboxes_, gt_labels_) in tqdm(
         enumerate(dataloader)
     ):
-        sizes = [sizes[0][0].item(), sizes[1][0].item()]
+        sizes = [sizes[0][0].item(), sizes[0][1].item()]
         pred_bboxes_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
         gt_labels += list(gt_labels_.numpy())
-        gt_difficults += list(gt_difficults_.numpy())
         pred_bboxes += pred_bboxes_
         pred_labels += pred_labels_
         pred_scores += pred_scores_
@@ -34,7 +33,6 @@ def eval(dataloader, faster_rcnn):
         pred_scores,
         gt_bboxes,
         gt_labels,
-        gt_difficults,
         use_07_metric=True,
     )
 
@@ -49,6 +47,7 @@ def train(**kwargs):
     train_dir = opt.TRAIN_IMG_DIR
     train_labels_path = opt.TRAIN_ANN
     val_labels_path = opt.VAL_ANN
+    test_labels_path = opt.TEST_ANN
 
     # 如果训练数据和验证数据不存在，则生成数据
     if not os.path.exists(train_labels_path) or not os.path.exists(val_labels_path):
@@ -59,7 +58,7 @@ def train(**kwargs):
     val_dataset = TestDataset(val_labels_path, train_dir)
 
     train_loader = DataLoader(train_dataset, batch_size=opt.BATCH_SIZE, shuffle=True, collate_fn=collate_fn,num_workers=opt.num_workers)
-    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=collate_fn,num_workers=opt.test_num_workers)
+    val_loader = DataLoader(val_dataset, batch_size=opt.BATCH_SIZE, shuffle=False, collate_fn=test_collate_fn,num_workers=opt.test_num_workers)
 
     model = FasterRCNNVGG16(n_fg_class=opt.NUM_CLASSES, ratios=[0.5, 1, 2], anchor_scales=[8, 16, 32])
     print("model construct completed")

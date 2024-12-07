@@ -44,6 +44,7 @@ class Dataset(object):
         if ori_img is None or len(bbox) == 0 or len(label) == 0 or not is_valid_bbox(bbox, ori_img.shape):
             return None
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
+        img = torch.from_numpy(img.copy())
         # FIX：img.copy()报错，改为img.clone()
         return img.clone(), bbox.clone(), label.clone(), scale
 
@@ -53,13 +54,15 @@ class Dataset(object):
 class TestDataset(object):
     def __init__(self, label_path, img_dir, split="test", use_difficult=True):# TODO false or true
         self.db = CocoDataset(
-            label_path, img_dir, use_difficult=use_difficult
-        )
+            label_path, img_dir)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
         img = preprocess(ori_img)
-        return img, ori_img.shape[1:], bbox, label, difficult
+        img = torch.from_numpy(img.copy())
+        height, width, _ = ori_img.shape  # 提取高度和宽度
+        sizes = torch.tensor([height, width])
+        return img, sizes, bbox, label
 
     def __len__(self):
         return len(self.db)
@@ -178,3 +181,20 @@ def collate_fn(batch):
     labels = torch.stack(labels, dim=0)
 
     return images, bboxes, labels, scales
+
+
+def test_collate_fn(batch):
+    # 过滤掉 None 样本
+    # FIX：原batch = [item for item in batch if item[0] is not None]
+    batch = [item for item in batch if item is not None]
+    if len(batch) == 0:
+        return None, None, None, None
+
+    # 使用默认的 collate_fn 进行批处理
+    images, sizes, bboxes, labels = zip(*batch)
+    images = torch.stack(images, dim=0)
+    bboxes = torch.stack(bboxes, dim=0)
+    labels = torch.stack(labels, dim=0)
+
+    return images, sizes, bboxes, labels
+

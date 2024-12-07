@@ -13,20 +13,22 @@ class Config:
     TEST_IMG_DIR = 'data/image/val/'
     TRAIN_ANN = 'data/annotations/train.json'
     VAL_ANN = 'data/annotations/val.json'
+    TEST_ANN = 'data/annotations/test.json'
 
     TRAIN_RATIO = 0.8 # 训练集占比
     
     # 网络参数 TODO
     NUM_CLASSES = 2
     LEARNING_RATE = 0.005
-    BATCH_SIZE = 64
-    EPOCHS = 10
+    BATCH_SIZE = 1
+    EPOCHS = 20
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    
+
+    img_size = 600;
     min_size = 600  # image resize
     max_size = 1000  # image resize
     num_workers = 0 # FIX：8->0
-    test_num_workers = 8
+    test_num_workers = 0
 
     # sigma for l1_smooth_loss
     rpn_sigma = 3.0

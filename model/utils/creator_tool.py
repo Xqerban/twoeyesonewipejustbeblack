@@ -411,6 +411,7 @@ class ProposalCreator(object):
         # when test, remember
         # faster_rcnn.eval()
         # to set self.traing = False
+        scale = 1.0
         if self.parent_model.training:
             n_pre_nms = self.n_train_pre_nms
             n_post_nms = self.n_train_post_nms
