@@ -150,6 +150,13 @@ class VGG16RoIHead(nn.Module):
         rois = at.totensor(rois).float()
         indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
 
+        # FIX
+        if rois.size(0) == 0:
+            # Return zeros or any default value in the case of no RoIs
+            return t.zeros(0, self.n_class * 4).to(rois.device), t.zeros(0, self.n_class).to(rois.device)
+        # FIX：Proceed if RoIs exist
+        indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
+
         # Important: (y1, x1, y2, x2) -> (x1, y1, x2, y2)
         xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
         # Make sure the tensor is contiguous, good for performance.
