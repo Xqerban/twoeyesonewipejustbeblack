@@ -8,6 +8,7 @@ from dataset.coco_dataset import CocoDataset
 from . import util
 import numpy as np
 import torch
+import torchvision.transforms.functional as F
 
 # FIX：检查bbox边界
 def is_valid_bbox(bbox, img_shape):
@@ -44,6 +45,15 @@ class Dataset(object):
         if ori_img is None or len(bbox) == 0 or len(label) == 0 or not is_valid_bbox(bbox, ori_img.shape):
             return None
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
+
+        # FIX2：将 numpy.ndarray 转换为 torch.Tensor
+        if isinstance(img, np.ndarray):
+            img = t.from_numpy(img.copy()).float()  # 使用 copy() 确保内存连续
+        if isinstance(bbox, np.ndarray):
+            bbox = t.from_numpy(bbox.copy()).float()
+        if isinstance(label, np.ndarray):
+            label = t.from_numpy(label.copy()).long()
+
         # FIX：img.copy()报错，改为img.clone()
         return img.clone(), bbox.clone(), label.clone(), scale
 
@@ -170,9 +180,20 @@ def collate_fn(batch):
     batch = [item for item in batch if item is not None]
     if len(batch) == 0:
         return None, None, None, None
+    
+    # fix2:
+    # 找到最大尺寸
+    max_height = max(img.shape[1] for img, _, _, _ in batch)
+    max_width = max(img.shape[2] for img, _, _, _ in batch)
+
+    # 调整图像大小
+    images = [F.resize(img, (max_height, max_width)) for img, _, _, _ in batch]
+    bboxes = [bbox for _, bbox, _, _ in batch]
+    labels = [label for _, _, label, _ in batch]
+    scales = [scale for _, _, _, scale in batch]
 
     # 使用默认的 collate_fn 进行批处理
-    images, bboxes, labels, scales = zip(*batch)
+    # images, bboxes, labels, scales = zip(*batch)
     images = torch.stack(images, dim=0)
     bboxes = torch.stack(bboxes, dim=0)
     labels = torch.stack(labels, dim=0)
