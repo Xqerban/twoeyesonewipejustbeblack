@@ -62,7 +62,7 @@ class FasterRCNNTrainer(nn.Module):
 
         # indicators for training status
         self.rpn_cm = ConfusionMeter(2)
-        self.roi_cm = ConfusionMeter(Config.NUM_CLASSES + 1)
+        self.roi_cm = ConfusionMeter(Config.NUM_CLASSES + 1) # FIX：类别数更改
         self.meters = {
             k: AverageValueMeter() for k in LossTuple._fields
         }  # average loss
@@ -158,7 +158,7 @@ class FasterRCNNTrainer(nn.Module):
 
         # ------------------ ROI losses (fast rcnn loss) -------------------#
         n_sample = roi_cls_loc.shape[0]
-        # FIX
+        # FIX：非法数据处理
         if n_sample == 0:
             # Return empty losses if there are no RoIs
             return LossTuple(
