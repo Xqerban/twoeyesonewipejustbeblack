@@ -74,6 +74,10 @@ def train(**kwargs):
     for epoch in range(opt.epoch):
         trainer.reset_meters()
         for ii, (img, bbox_, label_, scale) in tqdm(enumerate(train_loader)):
+            # FIX: 检查img是否为None 
+            if img is None or bbox_ is None or label_ is None:
+                continue 
+             
             scale = at.scalar(scale)# 放缩因子转换为标量值
             img, bbox, label = (
                 img.to(opt.DEVICE).float(),
@@ -139,6 +143,3 @@ def train(**kwargs):
 
 if __name__ == "__main__":
     train()
-    # import fire
-
-    # fire.Fire()
