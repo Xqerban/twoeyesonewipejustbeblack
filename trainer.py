@@ -13,6 +13,7 @@ from torchnet.meter import AverageValueMeter, ConfusionMeter
 from model.utils.creator_tool import AnchorTargetCreator, ProposalTargetCreator
 from utils import array_tool as at
 from utils.config import opt
+from utils.config import Config
 from utils.vis_tool import Visualizer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -61,7 +62,7 @@ class FasterRCNNTrainer(nn.Module):
 
         # indicators for training status
         self.rpn_cm = ConfusionMeter(2)
-        self.roi_cm = ConfusionMeter(21)
+        self.roi_cm = ConfusionMeter(Config.NUM_CLASSES + 1)
         self.meters = {
             k: AverageValueMeter() for k in LossTuple._fields
         }  # average loss
@@ -157,6 +158,17 @@ class FasterRCNNTrainer(nn.Module):
 
         # ------------------ ROI losses (fast rcnn loss) -------------------#
         n_sample = roi_cls_loc.shape[0]
+        # FIX
+        if n_sample == 0:
+            # Return empty losses if there are no RoIs
+            return LossTuple(
+                rpn_loc_loss,
+                rpn_cls_loss,
+                t.zeros_like(rpn_loc_loss),  # roi_loc_loss
+                t.zeros_like(rpn_cls_loss),  # roi_cls_loss
+                rpn_loc_loss + rpn_cls_loss,  # total_loss
+            )
+    
         roi_cls_loc = roi_cls_loc.view(n_sample, -1, 4)
         roi_loc = roi_cls_loc[
             t.arange(0, n_sample).long().to(device), at.totensor(gt_roi_label).long()
