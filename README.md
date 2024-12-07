@@ -1,5 +1,8 @@
 # 新项目
 我认为这个基于torch的项目不可能成为最终的答卷，但是其中会涉及到一些很有用的修改，我们改完之后可以直接沿用到原先的代码里面。
+
+### 注意！由于预训练模型过大，超过100MB，无法上传到github，所以请自行下载预训练模型，在根目录下新建一个文件夹"pretrained_model"，将其放在文件夹内。下载地址是：https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth
+
 ##### 新项目基于torch自带的faster R-CNN，具体的模型是：
 ```python
 model = fasterrcnn_resnet50_fpn(weights=None)
