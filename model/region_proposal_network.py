@@ -253,7 +253,9 @@ def _enumerate_shifted_anchor(anchor_base, feat_stride, height, width):
 
     # NOTE  anchor_base: [A, 4], shift: [K, 4] -> [KA, 4]
     # We use broadcasting to add the shift to the anchor_base.
-    anchor = anchor_base.reshape((1, A, 4)) + shift.reshape((K, 1, 4)).transpose((1, 0, 2))
+    # FIX：这里我也不知道为什么，但是改了就不报错
+    # anchor = anchor_base.reshape((1, A, 4)) + shift.reshape((K, 1, 4)).transpose((1, 0, 2))
+    anchor = anchor_base.reshape((1, A, 4)) + shift.reshape((K, 1, 4))
 
     # Reshape anchor to [K*A, 4]
     anchor = anchor.reshape((K * A, 4)).astype(np.float32)  # [K*A, 4]
