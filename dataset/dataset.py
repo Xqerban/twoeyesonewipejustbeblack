@@ -9,6 +9,29 @@ from . import util
 import numpy as np
 import torch
 
+# FIX：检查bbox边界
+def is_valid_bbox(bbox, img_shape):
+    """
+    检查边界框是否有效。边界框应该是一个包含 [x1, y1, x2, y2] 的数组。
+    这里检查：
+        - 边界框的坐标是否为正
+        - 边界框的宽高是否合理
+        - 边界框是否在图像范围内
+    Args:
+        bbox: 边界框 (N, 4)
+        img_shape: 图像的尺寸 (height, width)
+
+    Returns:
+        bool: 如果边界框有效返回True，否则返回False
+    """
+    height, width = img_shape[:2]
+
+    # 检查边界框的坐标是否合理，且不超出图像范围
+    for box in bbox:
+        x1, y1, x2, y2 = box
+        if x1 < 0 or y1 < 0 or x2 > width or y2 > height or x2 <= x1 or y2 <= y1:
+            return False  # 无效的边界框
+    return True
 
 class Dataset(object):
     def __init__(self, label_path, img_dir):
@@ -17,10 +40,12 @@ class Dataset(object):
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
-        if ori_img is None or len(bbox) == 0 or len(label) == 0:
+        # FIX
+        if ori_img is None or len(bbox) == 0 or len(label) == 0 or not is_valid_bbox(bbox, ori_img.shape):
             return None
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        return img.copy(), bbox.clone(), label.clone(), scale
+        # FIX：img.copy()报错，改为img.clone()
+        return img.clone(), bbox.clone(), label.clone(), scale
 
     def __len__(self):
         return len(self.db)
@@ -75,6 +100,11 @@ def pytorch_normalze(img):
     https://github.com/pytorch/vision/issues/223
     return appr -1~1 RGB
     """
+    # FIX: Ensure the image is in [C, H, W] format
+    if img.ndim != 3 or img.shape[0] != 3:  # If it's not in [3, H, W] format
+        # If the image is not 3-channel RGB, return a default value (e.g., zero image)
+        return np.zeros((3, 224, 224), dtype=np.float32)  # Return a default 3-channel image of shape [3, 224, 224]
+        
     normalize = tvtsf.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     img = normalize(t.from_numpy(img))
     return img.numpy()
@@ -118,6 +148,13 @@ def preprocess(img, min_size=600, max_size=1000):
     img = sktsf.resize(
         img, (C, H * scale, W * scale), mode="reflect", anti_aliasing=False
     )
+
+    # FIX
+    # img = sktsf.resize(img, (int(H * scale), int(W * scale)), mode="reflect", anti_aliasing=True)
+    if img.ndim != 3 or img.shape[0] != 3:  # If it's not in [3, H, W] format
+        # If the image is not 3-channel RGB, return a default value (e.g., zero image)
+        return np.zeros((3, 224, 224), dtype=np.float32)  # Return a default 3-channel image of shape [3, 224, 224]
+
     # both the longer and shorter should be less than
     # max_size and min_size
     if opt.caffe_pretrain:
@@ -129,7 +166,10 @@ def preprocess(img, min_size=600, max_size=1000):
 
 def collate_fn(batch):
     # 过滤掉 None 样本
-    batch = [item for item in batch if item[0] is not None]
+    # FIX：原batch = [item for item in batch if item[0] is not None]
+    batch = [item for item in batch if item is not None]
+    if len(batch) == 0:
+        return None, None, None, None
 
     # 使用默认的 collate_fn 进行批处理
     images, bboxes, labels, scales = zip(*batch)
