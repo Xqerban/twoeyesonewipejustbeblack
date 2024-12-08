@@ -1,4 +1,6 @@
 data/image/train
 data/image/val 
+model/
+output/
 __pycache__/
 /.idea
