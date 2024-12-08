@@ -21,6 +21,7 @@ class TestDataset(Dataset):
         self.img_dir = img_dir
         self.transform = transform
         self.img_ids = os.listdir(img_dir)  # 获取所有图片的文件名
+        self.original_sizes = {}
 
     def __len__(self):
         return len(self.img_ids)
@@ -29,6 +30,7 @@ class TestDataset(Dataset):
         img_id = self.img_ids[idx]
         img_path = os.path.join(self.img_dir, img_id)
         img = Image.open(img_path).convert("RGB")
+        self.original_sizes[img_id] = img.size
 
         if self.transform:
             img = self.transform(img)
@@ -54,6 +56,7 @@ def generate_predictions(model, dataloader, output_json_path):
             # 模型推理
             predictions = model(images)
 
+
             for i, img_id in enumerate(img_ids):
                 prediction = predictions[i]
 
@@ -66,6 +69,14 @@ def generate_predictions(model, dataloader, output_json_path):
                 mask = labels == 1
                 boxes = boxes[mask]
                 scores = scores[mask]
+
+                if len(boxes) > 0:
+                    original_width, original_height = dataloader.dataset.original_sizes[img_id]  # 获取原始图像的大小
+                    scale_x = original_width / 800  # 计算宽度的缩放比例
+                    scale_y = original_height / 800  # 计算高度的缩放比例
+
+                    # 将预测框的坐标缩放回原始图像的大小
+                    boxes = boxes * np.array([scale_x, scale_y, scale_x, scale_y])  # 还原bbox大小
 
                 # 如果有预测框，保存预测框
                 region = boxes.tolist() if len(boxes) > 0 else []
