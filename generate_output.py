@@ -69,6 +69,7 @@ def generate_predictions(model, dataloader, output_json_path):
                 mask = labels == 1
                 boxes = boxes[mask]
                 scores = scores[mask]
+                region = []
 
                 if len(boxes) > 0:
                     original_width, original_height = dataloader.dataset.original_sizes[img_id]  # 获取原始图像的大小
@@ -78,8 +79,15 @@ def generate_predictions(model, dataloader, output_json_path):
                     # 将预测框的坐标缩放回原始图像的大小
                     boxes = boxes * np.array([scale_x, scale_y, scale_x, scale_y])  # 还原bbox大小
 
+                    best_idx = np.argmax(scores)
+                    best_box = boxes[best_idx]
+                    best_score = scores[best_idx]
+
+                    # 将最高置信度的框添加到结果中
+                    region = [best_box.tolist()]  # 转换为原生类型
+
                 # 如果有预测框，保存预测框
-                region = boxes.tolist() if len(boxes) > 0 else []
+                # region = boxes.tolist() if len(boxes) > 0 else []
 
                 # 将结果添加到列表中
                 results.append({"id": img_id, "region": region})
