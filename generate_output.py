@@ -72,12 +72,12 @@ def generate_predictions(model, dataloader, output_json_path):
                 region = []
 
                 if len(boxes) > 0:
-                    original_width, original_height = dataloader.dataset.original_sizes[img_id]  # 获取原始图像的大小
-                    scale_x = original_width / 800  # 计算宽度的缩放比例
-                    scale_y = original_height / 800  # 计算高度的缩放比例
-
+                    # original_width, original_height = dataloader.dataset.original_sizes[img_id]  # 获取原始图像的大小
+                    # scale_x = original_width / 800  # 计算宽度的缩放比例
+                    # scale_y = original_height / 800  # 计算高度的缩放比例
+                    #
                     # 将预测框的坐标缩放回原始图像的大小
-                    boxes = boxes * np.array([scale_x, scale_y, scale_x, scale_y])  # 还原bbox大小
+                    # boxes = boxes * np.array([scale_x, scale_y, scale_x, scale_y])  # 还原bbox大小
 
                     best_idx = np.argmax(scores)
                     best_box = boxes[best_idx]
@@ -100,20 +100,20 @@ def generate_predictions(model, dataloader, output_json_path):
 # 图像转换操作
 transform = transforms.Compose([
     transforms.ToTensor(),  # 转换为Tensor
-    transforms.Resize((800, 800)),  # 统一图像大小
+    # transforms.Resize((800, 800)),  # 统一图像大小
 ])
 
 # 定义测试数据集和数据加载器
 test_dataset = TestDataset(img_dir="data/image/val", transform=transform)
-test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-model = fasterrcnn_resnet50_fpn(pretrained=False)
+model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False)
 
 # 修改模型的分类头部分，将类别数改为2（篡改和未篡改）
 in_features = model.roi_heads.box_predictor.cls_score.in_features
 model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, num_classes=2)
 # 修改模型的分类头部分，将类别数改为2（篡改和未篡改）
-load_model(model, 'model/model.pth')
+load_model(model, 'model/model7.pth')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 generate_predictions(model, test_loader, "output/label_test.json")
