@@ -1,6 +1,8 @@
-data/image/train
-data/image/val 
+data/
+datasets/
 model/
 output/
+runs/
+datasets/coco/
 __pycache__/
 /.idea
